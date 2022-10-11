@@ -34,6 +34,9 @@ export default function NavBar() {
                     <Link href="/about" passHref>
                         <Nav.Link className={router.pathname == "/about" ? "active" : ""}>ABOUT</Nav.Link>
                     </Link>
+                    <Link href="/team" passHref>
+                        <Nav.Link className={router.pathname == "/team" ? "active" : ""}>TEAM</Nav.Link>
+                    </Link>
                     <Link href="/contact" passHref>
                         <Nav.Link className={router.pathname == "/contact" ? "active" : ""}>CONTACT US</Nav.Link>
                     </Link>
