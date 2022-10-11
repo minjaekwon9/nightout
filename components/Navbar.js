@@ -15,7 +15,7 @@ export default function NavBar() {
     const router = useRouter()
 
     return (
-        <Navbar bg="dark" variant="dark">
+        <Navbar bg="dark" variant="dark" expand="lg">
             <Container fluid className='ms-4'>
                 <Navbar.Brand href="#home">
                     <img
@@ -27,20 +27,23 @@ export default function NavBar() {
                     />
                     NightOut
                 </Navbar.Brand>
-                <Nav className="m-auto">
-                    <Link href="/" passHref>
-                        <Nav.Link className={router.pathname == "/" ? "active" : ""}>HOME</Nav.Link>
-                    </Link>
-                    <Link href="/about" passHref>
-                        <Nav.Link className={router.pathname == "/about" ? "active" : ""}>ABOUT</Nav.Link>
-                    </Link>
-                    <Link href="/team" passHref>
-                        <Nav.Link className={router.pathname == "/team" ? "active" : ""}>TEAM</Nav.Link>
-                    </Link>
-                    <Link href="/contact" passHref>
-                        <Nav.Link className={router.pathname == "/contact" ? "active" : ""}>CONTACT US</Nav.Link>
-                    </Link>
-                </Nav>
+                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="m-auto">
+                        <Link href="/" passHref>
+                            <Nav.Link className={router.pathname == "/" ? "active" : ""}>HOME</Nav.Link>
+                        </Link>
+                        <Link href="/about" passHref>
+                            <Nav.Link className={router.pathname == "/about" ? "active" : ""}>ABOUT</Nav.Link>
+                        </Link>
+                        <Link href="/team" passHref>
+                            <Nav.Link className={router.pathname == "/team" ? "active" : ""}>TEAM</Nav.Link>
+                        </Link>
+                        <Link href="/contact" passHref>
+                            <Nav.Link className={router.pathname == "/contact" ? "active" : ""}>CONTACT US</Nav.Link>
+                        </Link>
+                    </Nav>
+                </Navbar.Collapse>
             </Container>
         </Navbar>
     )
