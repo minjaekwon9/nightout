@@ -1,8 +1,24 @@
 // LIBRARY IMPORTS
+import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
 import { default as Navbar } from '../components/Navbar'
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
 
 export default function Home() {
+
+  const [pos, setPos] = useState()
+
+  useEffect(() => {
+    // Checks if "geolocation" exists using "?." (null access check) and grabs the user's current coordinates if so
+    navigator?.geolocation.getCurrentPosition(({ coords: { latitude: lat, longitude: lng } }) => {
+      const pos = { lat, lng }
+      setPos({ pos })
+    })
+  }, [])
+  console.log(pos)
+
   return (
     <div>
       <Head>
@@ -11,7 +27,14 @@ export default function Home() {
         <link rel="icon" href="/icon.svg" />
       </Head>
       <Navbar />
-      An easy way to plan a fun-filled night out with your friends!
+      <Container className='my-5'>
+        <Row className='text-center'>
+          <Col>
+            <h1>NightOut</h1>
+            <h4>Use NightOut to plan your next day trip wherever you are or whatever you want to do!</h4>
+          </Col>
+        </Row>
+      </Container>
     </div>
   )
 }
