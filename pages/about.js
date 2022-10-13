@@ -1,8 +1,10 @@
 // LIBRARY IMPORTS
-import { default as Navbar } from '../components/Navbar'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+
+// CUSTOM IMPORTS
+import { default as Navbar } from '../components/Navbar'
 
 export default function About() {
     return (

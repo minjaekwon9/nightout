@@ -1,14 +1,28 @@
 // LIBRARY IMPORTS
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
-import { default as Navbar } from '../components/Navbar'
+import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+import Select from 'react-select'
+import makeAnimated from 'react-select/animated'
+
+// CUSTOME IMPORTS
+import { default as Navbar } from '../components/Navbar'
+
+const options = [
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'dessert', label: 'Dessert' },
+  { value: 'bar', label: 'Bar' },
+  { value: 'entertainment', label: 'Entertainment' },
+]
 
 export default function Home() {
 
   const [pos, setPos] = useState()
+  const form = useRef()
 
   useEffect(() => {
     // Checks if "geolocation" exists using "?." (null access check) and grabs the user's current coordinates if so
@@ -18,6 +32,12 @@ export default function Home() {
     })
   }, [])
   console.log(pos)
+
+  const findPlaces = (e) => {
+    e.preventDefault()
+    console.log(form.current)
+    e.target.reset()
+  }
 
   return (
     <div>
@@ -34,6 +54,51 @@ export default function Home() {
             <h4>Use NightOut to plan your next day trip wherever you are or whatever you want to do!</h4>
           </Col>
         </Row>
+        <Container
+          className='my-5 py-4 px-5 rounded'
+          style={{ backgroundColor: "#556d7c", maxWidth: 600 }}
+        >
+          <h3 className='mb-4 text-center'>Let us plan your trip for you</h3>
+          <Form ref={form} onSubmit={findPlaces}>
+            <Form.Group className="mb-3" controlId="formLocation">
+              <Form.Label>Where are you located?</Form.Label>
+              <Form.Control
+                required={!pos}
+                type="text"
+                placeholder="Current Location"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formStops">
+              <Form.Label>How many stops do you want to make?</Form.Label>
+              <Form.Select>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+                <option value="4">Four</option>
+                <option value="5">Five</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formActivities">
+              <Form.Label>What do you want to do? (Choose an activity for each stop)</Form.Label>
+              <Select isMulti makeAnimated options={options} />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formRadius">
+              <Form.Label>How far are you willing to travel?</Form.Label>
+              <Form.Select>
+                <option value="5">5 miles</option>
+                <option value="10">10 miles</option>
+                <option value="15">15 miles</option>
+                <option value="25">20 miles</option>
+                <option value="50">50 miles</option>
+              </Form.Select>
+            </Form.Group>
+            <div className='text-center'>
+              <Button variant="outline-light" type="submit">
+                Submit
+              </Button>
+            </div>
+          </Form>
+        </Container>
       </Container>
     </div>
   )
