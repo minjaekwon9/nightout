@@ -62,10 +62,22 @@ export default function Home() {
   }, [])
 
   const findPlaces = (e) => {
-    // Add form data validations here
-    // Can't submit unless # of stops == # of activities
     e.preventDefault()
-    setValues(initialState)
+    if (!pos) {
+      Notiflix.Notify.failure("Enter the location.",
+        { timeout: 3000, fontSize: "1rem", width: "210px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+    } else if (!values.numOfStops) {
+      Notiflix.Notify.failure("Select the number of stops.",
+        { timeout: 3000, fontSize: "1rem", width: "280px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+    } else if (!values.activities || values.activities.length != values.numOfStops.value) {
+      Notiflix.Notify.failure("Make sure the number of activities and stops match.",
+        { timeout: 3000, fontSize: "1rem", width: "460px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+    } else if (!values.radius) {
+      Notiflix.Notify.failure("Select how far you can go.",
+        { timeout: 3000, fontSize: "1rem", width: "270px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+    } else {
+      setValues(initialState)
+    }
   }
 
   const onChange = (e, type) => {
@@ -114,7 +126,6 @@ export default function Home() {
               <Form.Group className="mb-3" controlId="formLocation">
                 <Form.Label>Where are you located?</Form.Label>
                 <Form.Control
-                  required={!pos}
                   type="text"
                   placeholder="Current Location"
                   name='location'
@@ -142,7 +153,7 @@ export default function Home() {
                   className='py-2'
                   instanceId="formActivities"
                   options={activities}
-                  closeMenuOnSelect={false}
+                  // closeMenuOnSelect={false}
                   isMulti
                   placeholder='- Select -'
                   name='activities'
