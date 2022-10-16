@@ -20,10 +20,10 @@ export default function Contact() {
         emailjs.sendForm('contact_service', 'contact_form', form.current, '3N2FH8Rf_RLs67D4S')
             .then(() => {
                 Notiflix.Notify.success("Your message has been sent, we will get back to you shortly!",
-                    { timeout: 10000, fontSize: "1rem", width: "530px", position: "center-top", clickToClose: true })
+                    { timeout: 10000, fontSize: "1rem", width: "530px", position: "center-top", clickToClose: true, })
             }, (error) => {
                 Notiflix.Notify.failure("An error has occurred, please try again.",
-                    { timeout: 10000, fontSize: "1rem", width: "380px", position: "center-top", clickToClose: true })
+                    { timeout: 10000, fontSize: "1rem", width: "380px", position: "center-top", clickToClose: true, })
             })
         e.target.reset()
     }

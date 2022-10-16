@@ -8,35 +8,85 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Select from 'react-select'
 import makeAnimated from 'react-select/animated'
+import Notiflix from 'notiflix'
 
 // CUSTOME IMPORTS
 import { default as Navbar } from '../components/Navbar'
 
-const options = [
+const initialState = {
+  location: '',
+  numOfStops: '',
+  activities: '',
+  radius: '',
+}
+
+const numOfStops = [
+  { value: 1, label: 'One', name: 'numOfStops' },
+  { value: 2, label: 'Two', name: 'numOfStops' },
+  { value: 3, label: 'Three', name: 'numOfStops' },
+  { value: 4, label: 'Four', name: 'numOfStops' },
+]
+
+const activities = [
   { value: 'restaurant', label: 'Restaurant' },
   { value: 'dessert', label: 'Dessert' },
   { value: 'bar', label: 'Bar' },
   { value: 'entertainment', label: 'Entertainment' },
 ]
 
+const radius = [
+  { value: 5, label: '5 miles', name: 'radius' },
+  { value: 10, label: '10 miles', name: 'radius' },
+  { value: 15, label: '15 miles', name: 'radius' },
+  { value: 25, label: '25 miles', name: 'radius' },
+  { value: 50, label: '50 miles', name: 'radius' },
+]
+
+const animatedComponents = makeAnimated()
+
 export default function Home() {
 
   const [pos, setPos] = useState()
-  const form = useRef()
+  const [values, setValues] = useState(initialState)
 
   useEffect(() => {
     // Checks if "geolocation" exists using "?." (null access check) and grabs the user's current coordinates if so
     navigator?.geolocation.getCurrentPosition(({ coords: { latitude: lat, longitude: lng } }) => {
       const pos = { lat, lng }
       setPos({ pos })
+      if (pos) {
+        Notiflix.Notify.success("Updated the current location.",
+          { timeout: 5000, fontSize: "1rem", width: "290px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+      }
     })
   }, [])
-  console.log(pos)
 
   const findPlaces = (e) => {
+    // Add form data validations here
+    // Can't submit unless # of stops == # of activities
     e.preventDefault()
-    console.log(form.current)
-    e.target.reset()
+    setValues(initialState)
+  }
+
+  const onChange = (e, type) => {
+    if (type == 'text') {
+      const { name, value } = e.target
+      setValues({ ...values, [name]: value })
+    } else if (type == 'select') {
+      const { name } = e
+      setValues({ ...values, [name]: e })
+    } else if (type == 'activities') {
+      const numOfStops = values.numOfStops.value
+      if (numOfStops) {
+        e.length <= numOfStops
+          ? setValues({ ...values, activities: e })
+          : Notiflix.Notify.failure("Add more stops to add more activities.",
+            { timeout: 1500, fontSize: "1rem", width: "355px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+      } else {
+        Notiflix.Notify.failure("Please select the number of stops first.",
+          { timeout: 1500, fontSize: "1rem", width: "360px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+      }
+    }
   }
 
   return (
@@ -59,39 +109,61 @@ export default function Home() {
           style={{ backgroundColor: "#556d7c", maxWidth: 600 }}
         >
           <h3 className='mb-4 text-center'>Let us plan your trip for you</h3>
-          <Form ref={form} onSubmit={findPlaces}>
-            <Form.Group className="mb-3" controlId="formLocation">
-              <Form.Label>Where are you located?</Form.Label>
-              <Form.Control
-                required={!pos}
-                type="text"
-                placeholder="Current Location"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formStops">
-              <Form.Label>How many stops do you want to make?</Form.Label>
-              <Form.Select>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-                <option value="4">Four</option>
-                <option value="5">Five</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formActivities">
-              <Form.Label>What do you want to do? (Choose an activity for each stop)</Form.Label>
-              <Select isMulti makeAnimated options={options} />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formRadius">
-              <Form.Label>How far are you willing to travel?</Form.Label>
-              <Form.Select>
-                <option value="5">5 miles</option>
-                <option value="10">10 miles</option>
-                <option value="15">15 miles</option>
-                <option value="25">20 miles</option>
-                <option value="50">50 miles</option>
-              </Form.Select>
-            </Form.Group>
+          <Form onSubmit={findPlaces}>
+            <Row>
+              <Form.Group className="mb-3" controlId="formLocation">
+                <Form.Label>Where are you located?</Form.Label>
+                <Form.Control
+                  required={!pos}
+                  type="text"
+                  placeholder="Current Location"
+                  name='location'
+                  value={values.location}
+                  onChange={(e) => onChange(e, "text")}
+                />
+              </Form.Group>
+            </Row>
+            <Row>
+              <label className='mb-3'>How many stops do you want to make?
+                <Select
+                  className='py-2'
+                  instanceId="formStops"
+                  options={numOfStops}
+                  placeholder='- Select -'
+                  name='numOfStops'
+                  value={values.numOfStops}
+                  onChange={(e) => onChange(e, "select")}
+                />
+              </label>
+            </Row>
+            <Row>
+              <label className='mb-3'>What do you want to do? (Choose an activity for each stop)
+                <Select
+                  className='py-2'
+                  instanceId="formActivities"
+                  options={activities}
+                  closeMenuOnSelect={false}
+                  isMulti
+                  placeholder='- Select -'
+                  name='activities'
+                  value={values.activities}
+                  onChange={(e) => onChange(e, "activities")}
+                />
+              </label>
+            </Row>
+            <Row>
+              <label className='mb-3'>How far are you willing to travel?
+                <Select
+                  className='py-2'
+                  instanceId="formRadius"
+                  options={radius}
+                  placeholder='- Select -'
+                  name='radius'
+                  value={values.radius}
+                  onChange={(e) => onChange(e, "select")}
+                />
+              </label>
+            </Row>
             <div className='text-center'>
               <Button variant="outline-light" type="submit">
                 Submit
