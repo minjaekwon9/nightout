@@ -34,34 +34,36 @@ export default function Contact() {
             {/* Sends an email to minjaekwon24601@gmail.com using EmailJS */}
             <Container
                 className='my-5 p-4 rounded'
-                style={{ backgroundColor: "#556d7c", maxWidth: 600 }}
+                style={{ maxWidth: 650 }}
             >
                 <h1 className='mb-4 text-center'>Shoot us an email!</h1>
-                <Form ref={form} onSubmit={sendEmail}>
-                    <Form.Group as={Row} className="mb-3" controlId="contactFormName">
-                        <Form.Label column sm="2">Name: </Form.Label>
+                <Form ref={form} onSubmit={sendEmail} style={{ fontSize: '1.2rem' }}>
+                    <Form.Group as={Row} className="mb-4" controlId="contactFormName">
+                        <Form.Label column sm="2" >Name: </Form.Label>
                         <Col sm="10">
                             <Form.Control
                                 required
                                 name="user_name"
                                 type="text"
                                 placeholder="Enter your name"
+                                style={{ fontSize: '1.2rem' }}
                             />
                         </Col>
                     </Form.Group>
-                    <Form.Group as={Row} className="mb-3" controlId="contactFormEmail">
-                        <Form.Label column sm="2">Email: </Form.Label>
+                    <Form.Group as={Row} className="mb-4" controlId="contactFormEmail">
+                        <Form.Label column sm="2" >Email: </Form.Label>
                         <Col sm="10">
                             <Form.Control
                                 required
                                 name="user_email"
                                 type="email"
                                 placeholder="Enter your email"
+                                style={{ fontSize: '1.2rem' }}
                             />
                         </Col>
                     </Form.Group>
-                    <Form.Group as={Row} className="mb-3" controlId="contactFormMsg">
-                        <Form.Label column sm="2">Message: </Form.Label>
+                    <Form.Group as={Row} className="mb-4" controlId="contactFormMsg">
+                        <Form.Label column sm="2" >Message: </Form.Label>
                         <Col sm="10">
                             <Form.Control
                                 required
@@ -69,11 +71,12 @@ export default function Contact() {
                                 as="textarea"
                                 rows={3}
                                 placeholder="Enter your message"
+                                style={{ fontSize: '1.2rem' }}
                             />
                         </Col>
                     </Form.Group>
                     <div className='text-center'>
-                        <Button variant="outline-light" type="submit">
+                        <Button variant="outline-light" type="submit" style={{ fontSize: '1.2rem' }}>
                             Submit
                         </Button>
                     </div>

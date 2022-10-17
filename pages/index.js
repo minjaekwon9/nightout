@@ -7,8 +7,8 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Select from 'react-select'
-import makeAnimated from 'react-select/animated'
 import Notiflix from 'notiflix'
+import axios from "axios"
 
 // CUSTOME IMPORTS
 import { default as Navbar } from '../components/Navbar'
@@ -42,7 +42,7 @@ const radius = [
   { value: 50, label: '50 miles', name: 'radius' },
 ]
 
-const animatedComponents = makeAnimated()
+function milesToMeters(miles) { return miles * 1609 }
 
 export default function Home() {
 
@@ -76,6 +76,22 @@ export default function Home() {
       Notiflix.Notify.failure("Select how far you can go.",
         { timeout: 3000, fontSize: "1rem", width: "270px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
     } else {
+      const config = {
+        headers: {
+          Accept: 'application/json',
+          Authorization: 'fsq3dVwzOnzP0tuP8fE5mC6DPZUg6ZKJym59TSNTRmMa0dw=',
+        },
+        params: {
+          query: values.activities[0].value,
+          ll: pos,
+          radius: milesToMeters(values.radius.value),
+          open_now: 'true',
+          sort: 'DISTANCE'
+        }
+      }
+      axios.get('https://api.foursquare.com/v3/places/search', config).then(res => {
+        console.log(res.data)
+      })
       setValues(initialState)
     }
   }
@@ -112,15 +128,14 @@ export default function Home() {
       <Container className='my-5'>
         <Row className='text-center'>
           <Col>
-            <h1>NightOut</h1>
-            <h4>Use NightOut to plan your next day trip wherever you are or whatever you want to do!</h4>
+            <h1 className='display-3'>NightOut</h1>
+            <h1 className='display-6'>Use NightOut to plan your next outing wherever you are or whatever you want to do!</h1>
           </Col>
         </Row>
         <Container
-          className='my-5 py-4 px-5 rounded'
-          style={{ backgroundColor: "#556d7c", maxWidth: 600 }}
+          className='py-4 px-5 rounded'
+          style={{ maxWidth: 600 }}
         >
-          <h3 className='mb-4 text-center'>Let us plan your trip for you</h3>
           <Form onSubmit={findPlaces}>
             <Row>
               <Form.Group className="mb-3" controlId="formLocation">

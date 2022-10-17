@@ -1,6 +1,10 @@
+html,
 body {
-  background-color: #36454F;
-  color: #FFF;
+  height: 100%;
+  background: rgb(61, 3, 107);
+  background: linear-gradient(180deg, rgba(61, 3, 107, 1) 0%, rgba(38, 15, 80, 1) 50%, rgba(11, 5, 20, 1) 100%);
+  color: #FFF !important;
+  font-size: 18px;
 }
 
 /* Navbar CSS */
