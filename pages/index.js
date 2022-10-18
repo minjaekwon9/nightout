@@ -11,6 +11,7 @@ import axios from "axios"
 
 // CUSTOM IMPORTS
 
+
 const intialFormState = {
   location: '',
   numOfStops: '',
@@ -18,20 +19,19 @@ const intialFormState = {
   radius: '',
 }
 
+// Initialize the select options for React Select
 const numOfStops = [
   { value: 1, label: 'One', name: 'numOfStops' },
   { value: 2, label: 'Two', name: 'numOfStops' },
   { value: 3, label: 'Three', name: 'numOfStops' },
   { value: 4, label: 'Four', name: 'numOfStops' },
 ]
-
 const activities = [
   { value: 'restaurant', label: 'Restaurant' },
   { value: 'dessert', label: 'Dessert' },
   { value: 'bar', label: 'Bar' },
   { value: 'entertainment', label: 'Entertainment' },
 ]
-
 const radius = [
   { value: 5, label: '5 miles', name: 'radius' },
   { value: 10, label: '10 miles', name: 'radius' },
@@ -52,7 +52,7 @@ export default function Home() {
   const [resData, setResData] = useState({})
 
   useEffect(() => {
-    // Checks if "geolocation" exists using "?." (null access check) and grabs the user's current coordinates if so
+    // Check if "geolocation" exists using "?." (null access check) and grab the user's current coordinates if so
     navigator?.geolocation.getCurrentPosition(({ coords: { latitude: lat, longitude: lng } }) => {
       const pos = { lat, lng }
       setPos({ pos })
@@ -62,9 +62,10 @@ export default function Home() {
     })
   }, [])
 
+  // Find places for the trip using Foursquare
   const findPlaces = (e) => {
     e.preventDefault()
-    // Uses Notiflix for form validation
+    // Validate forms using Notiflix
     if (!pos) {
       createNotif("fail", "Enter the location.", "220px")
     } else if (!formValues.numOfStops) {
@@ -74,29 +75,37 @@ export default function Home() {
     } else if (!formValues.radius) {
       createNotif("fail", "Select how far you can go.", "285px")
     } else {
-      // Uses the form data to send a get request to the Foursquare Places API
+      // Use the form data to send a get request to the Foursquare Places API
+      async function getPlaces(config, activity) {
+        const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
+        console.log(res.data)
+        setResData((prevState) => ({ ...prevState, [activity]: res.data }))
+      }
+      // Send a get request for each stop
       for (let i = 0; i < formValues.numOfStops.value; i++) {
+        const activity = formValues.activities[i].value
+        const radius = formValues.radius.value * 1609
         const config = {
           headers: {
             Accept: 'application/json',
             Authorization: 'fsq3dVwzOnzP0tuP8fE5mC6DPZUg6ZKJym59TSNTRmMa0dw=',
           },
           params: {
-            query: formValues.activities[i].value,
+            query: activity,
             ll: pos,
-            radius: formValues.radius.value * 1609,
+            radius: radius,
             open_now: 'true',
             sort: 'DISTANCE'
           }
         }
-        axios.get('https://api.foursquare.com/v3/places/search', config).then(res => {
-          console.log(res.data)
-        })
+        getPlaces(config, activity)
       }
+      // Reset the form fields
       setFormValues(intialFormState)
     }
   }
 
+  // Keep track of the form fields' changes using State
   const onChange = (e, type) => {
     if (type == 'text') {
       const { name, value } = e.target
@@ -107,10 +116,12 @@ export default function Home() {
     } else if (type == 'activities') {
       const numOfStops = formValues.numOfStops.value
       if (numOfStops) {
+        // Check if activities exceed the number of stops selected
         e.length <= numOfStops
           ? setFormValues({ ...formValues, activities: e })
           : createNotif("fail", "Add more stops to add more activities.", "385px")
       } else {
+        // Check if number of stops has been selected first
         createNotif("fail", "Please select the number of stops first.", "390px")
       }
     }

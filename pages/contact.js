@@ -15,6 +15,7 @@ export default function Contact() {
 
     const form = useRef()
 
+    // Send an email to minjaekwon24601@gmail.com using EmailJS
     const sendEmail = (e) => {
         e.preventDefault()
         emailjs.sendForm('contact_service', 'contact_form', form.current, '3N2FH8Rf_RLs67D4S')
@@ -30,7 +31,6 @@ export default function Contact() {
 
     return (
         <div>
-            {/* Sends an email to minjaekwon24601@gmail.com using EmailJS */}
             <Container
                 className='my-5 p-4 rounded'
                 style={{ maxWidth: 650 }}
