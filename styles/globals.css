@@ -1,6 +1,7 @@
 html,
 body {
   height: 100%;
+  overflow: auto;
   background: rgb(61, 3, 107);
   background: linear-gradient(180deg, rgba(61, 3, 107, 1) 0%, rgba(38, 15, 80, 1) 50%, rgba(11, 5, 20, 1) 100%);
   color: #FFF !important;

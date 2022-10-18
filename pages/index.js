@@ -1,6 +1,5 @@
 // LIBRARY IMPORTS
 import React, { useState, useEffect, useRef } from 'react'
-import Head from 'next/head'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Container from 'react-bootstrap/Container'
@@ -10,10 +9,9 @@ import Select from 'react-select'
 import Notiflix from 'notiflix'
 import axios from "axios"
 
-// CUSTOME IMPORTS
-import { default as Navbar } from '../components/Navbar'
+// CUSTOM IMPORTS
 
-const initialState = {
+const intialFormState = {
   location: '',
   numOfStops: '',
   activities: '',
@@ -42,12 +40,16 @@ const radius = [
   { value: 50, label: '50 miles', name: 'radius' },
 ]
 
-function milesToMeters(miles) { return miles * 1609 }
+function createNotif(type, message, size) {
+  if (type === "success") return Notiflix.Notify.success(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
+  if (type === "fail") return Notiflix.Notify.failure(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
+}
 
 export default function Home() {
 
   const [pos, setPos] = useState()
-  const [values, setValues] = useState(initialState)
+  const [formValues, setFormValues] = useState(intialFormState)
+  const [resData, setResData] = useState({})
 
   useEffect(() => {
     // Checks if "geolocation" exists using "?." (null access check) and grabs the user's current coordinates if so
@@ -55,86 +57,77 @@ export default function Home() {
       const pos = { lat, lng }
       setPos({ pos })
       if (pos) {
-        Notiflix.Notify.success("Updated the current location.",
-          { timeout: 5000, fontSize: "1rem", width: "290px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+        createNotif("success", "Updated the current location.", "310px")
       }
     })
   }, [])
 
   const findPlaces = (e) => {
     e.preventDefault()
+    // Uses Notiflix for form validation
     if (!pos) {
-      Notiflix.Notify.failure("Enter the location.",
-        { timeout: 3000, fontSize: "1rem", width: "210px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
-    } else if (!values.numOfStops) {
-      Notiflix.Notify.failure("Select the number of stops.",
-        { timeout: 3000, fontSize: "1rem", width: "280px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
-    } else if (!values.activities || values.activities.length != values.numOfStops.value) {
-      Notiflix.Notify.failure("Make sure the number of activities and stops match.",
-        { timeout: 3000, fontSize: "1rem", width: "460px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
-    } else if (!values.radius) {
-      Notiflix.Notify.failure("Select how far you can go.",
-        { timeout: 3000, fontSize: "1rem", width: "270px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+      createNotif("fail", "Enter the location.", "220px")
+    } else if (!formValues.numOfStops) {
+      createNotif("fail", "Select the number of stops.", "295px")
+    } else if (!formValues.activities || formValues.activities.length != formValues.numOfStops.value) {
+      createNotif("fail", "Make sure the number of activities and stops match.", "495px")
+    } else if (!formValues.radius) {
+      createNotif("fail", "Select how far you can go.", "285px")
     } else {
-      const config = {
-        headers: {
-          Accept: 'application/json',
-          Authorization: 'fsq3dVwzOnzP0tuP8fE5mC6DPZUg6ZKJym59TSNTRmMa0dw=',
-        },
-        params: {
-          query: values.activities[0].value,
-          ll: pos,
-          radius: milesToMeters(values.radius.value),
-          open_now: 'true',
-          sort: 'DISTANCE'
+      // Uses the form data to send a get request to the Foursquare Places API
+      for (let i = 0; i < formValues.numOfStops.value; i++) {
+        const config = {
+          headers: {
+            Accept: 'application/json',
+            Authorization: 'fsq3dVwzOnzP0tuP8fE5mC6DPZUg6ZKJym59TSNTRmMa0dw=',
+          },
+          params: {
+            query: formValues.activities[i].value,
+            ll: pos,
+            radius: formValues.radius.value * 1609,
+            open_now: 'true',
+            sort: 'DISTANCE'
+          }
         }
+        axios.get('https://api.foursquare.com/v3/places/search', config).then(res => {
+          console.log(res.data)
+        })
       }
-      axios.get('https://api.foursquare.com/v3/places/search', config).then(res => {
-        console.log(res.data)
-      })
-      setValues(initialState)
+      setFormValues(intialFormState)
     }
   }
 
   const onChange = (e, type) => {
     if (type == 'text') {
       const { name, value } = e.target
-      setValues({ ...values, [name]: value })
+      setFormValues({ ...formValues, [name]: value })
     } else if (type == 'select') {
       const { name } = e
-      setValues({ ...values, [name]: e })
+      setFormValues({ ...formValues, [name]: e })
     } else if (type == 'activities') {
-      const numOfStops = values.numOfStops.value
+      const numOfStops = formValues.numOfStops.value
       if (numOfStops) {
         e.length <= numOfStops
-          ? setValues({ ...values, activities: e })
-          : Notiflix.Notify.failure("Add more stops to add more activities.",
-            { timeout: 1500, fontSize: "1rem", width: "355px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+          ? setFormValues({ ...formValues, activities: e })
+          : createNotif("fail", "Add more stops to add more activities.", "385px")
       } else {
-        Notiflix.Notify.failure("Please select the number of stops first.",
-          { timeout: 1500, fontSize: "1rem", width: "360px", position: "center-right", clickToClose: true, showOnlyTheLastOne: true })
+        createNotif("fail", "Please select the number of stops first.", "390px")
       }
     }
   }
 
   return (
     <div>
-      <Head>
-        <title>NightOut</title>
-        <meta name="description" content="Generated by create next app" />
-        <link rel="icon" href="/icon.svg" />
-      </Head>
-      <Navbar />
       <Container className='my-5'>
         <Row className='text-center'>
           <Col>
-            <h1 className='display-3'>NightOut</h1>
+            <h1 className='display-4'>NightOut</h1>
             <h1 className='display-6'>Use NightOut to plan your next outing wherever you are or whatever you want to do!</h1>
           </Col>
         </Row>
         <Container
-          className='py-4 px-5 rounded'
-          style={{ maxWidth: 600 }}
+          className='py-4 rounded'
+          style={{ maxWidth: 550 }}
         >
           <Form onSubmit={findPlaces}>
             <Row>
@@ -144,7 +137,7 @@ export default function Home() {
                   type="text"
                   placeholder="Current Location"
                   name='location'
-                  value={values.location}
+                  value={formValues.location}
                   onChange={(e) => onChange(e, "text")}
                 />
               </Form.Group>
@@ -157,7 +150,7 @@ export default function Home() {
                   options={numOfStops}
                   placeholder='- Select -'
                   name='numOfStops'
-                  value={values.numOfStops}
+                  value={formValues.numOfStops}
                   onChange={(e) => onChange(e, "select")}
                 />
               </label>
@@ -172,7 +165,7 @@ export default function Home() {
                   isMulti
                   placeholder='- Select -'
                   name='activities'
-                  value={values.activities}
+                  value={formValues.activities}
                   onChange={(e) => onChange(e, "activities")}
                 />
               </label>
@@ -185,7 +178,7 @@ export default function Home() {
                   options={radius}
                   placeholder='- Select -'
                   name='radius'
-                  value={values.radius}
+                  value={formValues.radius}
                   onChange={(e) => onChange(e, "select")}
                 />
               </label>

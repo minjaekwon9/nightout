@@ -40,7 +40,7 @@ export default function NavBar() {
                             <Nav.Link className={router.pathname == "/team" ? "active" : ""}>TEAM</Nav.Link>
                         </Link>
                         <Link href="/contact" passHref>
-                            <Nav.Link className={router.pathname == "/contact" ? "active" : ""}>CONTACT US</Nav.Link>
+                            <Nav.Link className={router.pathname == "/contact" ? "active" : ""}>CONTACT</Nav.Link>
                         </Link>
                     </Nav>
                 </Navbar.Collapse>

@@ -9,7 +9,7 @@ import emailjs from '@emailjs/browser'
 import Notiflix from 'notiflix'
 
 // CUSTOM IMPORTS
-import { default as Navbar } from '../components/Navbar'
+
 
 export default function Contact() {
 
@@ -20,24 +20,23 @@ export default function Contact() {
         emailjs.sendForm('contact_service', 'contact_form', form.current, '3N2FH8Rf_RLs67D4S')
             .then(() => {
                 Notiflix.Notify.success("Your message has been sent, we will get back to you shortly!",
-                    { timeout: 10000, fontSize: "1rem", width: "530px", position: "center-top", clickToClose: true, })
+                    { timeout: 10000, fontSize: "1rem", width: "560px", distance: "70px", position: "center-top", clickToClose: true, })
             }, (error) => {
                 Notiflix.Notify.failure("An error has occurred, please try again.",
-                    { timeout: 10000, fontSize: "1rem", width: "380px", position: "center-top", clickToClose: true, })
+                    { timeout: 10000, fontSize: "1rem", width: "390px", distance: "70px", position: "center-top", clickToClose: true, })
             })
         e.target.reset()
     }
 
     return (
         <div>
-            <Navbar />
             {/* Sends an email to minjaekwon24601@gmail.com using EmailJS */}
             <Container
                 className='my-5 p-4 rounded'
                 style={{ maxWidth: 650 }}
             >
-                <h1 className='mb-4 text-center'>Shoot us an email!</h1>
-                <Form ref={form} onSubmit={sendEmail} style={{ fontSize: '1.2rem' }}>
+                <h1 className='mb-4 text-center display-4'>Contact Us</h1>
+                <Form ref={form} onSubmit={sendEmail} style={{ fontSize: '1.1rem' }}>
                     <Form.Group as={Row} className="mb-4" controlId="contactFormName">
                         <Form.Label column sm="2" >Name: </Form.Label>
                         <Col sm="10">
@@ -46,7 +45,7 @@ export default function Contact() {
                                 name="user_name"
                                 type="text"
                                 placeholder="Enter your name"
-                                style={{ fontSize: '1.2rem' }}
+                                style={{ fontSize: '1.1rem' }}
                             />
                         </Col>
                     </Form.Group>
@@ -58,7 +57,7 @@ export default function Contact() {
                                 name="user_email"
                                 type="email"
                                 placeholder="Enter your email"
-                                style={{ fontSize: '1.2rem' }}
+                                style={{ fontSize: '1.1rem' }}
                             />
                         </Col>
                     </Form.Group>
@@ -71,12 +70,12 @@ export default function Contact() {
                                 as="textarea"
                                 rows={3}
                                 placeholder="Enter your message"
-                                style={{ fontSize: '1.2rem' }}
+                                style={{ fontSize: '1.1rem' }}
                             />
                         </Col>
                     </Form.Group>
                     <div className='text-center'>
-                        <Button variant="outline-light" type="submit" style={{ fontSize: '1.2rem' }}>
+                        <Button variant="outline-light" type="submit" style={{ fontSize: '1.1rem' }}>
                             Submit
                         </Button>
                     </div>
