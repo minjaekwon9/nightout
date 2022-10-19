@@ -1,5 +1,5 @@
 // LIBRARY IMPORTS
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Container from 'react-bootstrap/Container'
@@ -45,9 +45,16 @@ function createNotif(type, message, size) {
   if (type === "fail") return Notiflix.Notify.failure(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
 }
 
+async function getCities(input) {
+  const res = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${input}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}&cachebuster=1625641871908&country=us&autocomplete=true&types=place`)
+  console.log(res.data)
+  return res.data
+}
+
 export default function Home() {
 
   const [pos, setPos] = useState()
+  const [citiesList, setCitiesList] = useState([])
   const [formValues, setFormValues] = useState(intialFormState)
   const [resData, setResData] = useState({})
 
@@ -67,7 +74,9 @@ export default function Home() {
     e.preventDefault()
     // Validate forms using Notiflix
     if (!pos) {
-      createNotif("fail", "Enter the location.", "220px")
+      createNotif("fail", "Enter a city name.", "220px")
+    } else if (formValues.location && !citiesList.includes(formValues.location)) {
+      createNotif("fail", "Select a city.", "175px")
     } else if (!formValues.numOfStops) {
       createNotif("fail", "Select the number of stops.", "295px")
     } else if (!formValues.activities || formValues.activities.length != formValues.numOfStops.value) {
@@ -78,7 +87,6 @@ export default function Home() {
       // Use the form data to send a get request to the Foursquare Places API
       async function getPlaces(config, activity) {
         const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
-        console.log(res.data)
         setResData((prevState) => ({ ...prevState, [activity]: res.data }))
       }
       // Send a get request for each stop
@@ -88,7 +96,7 @@ export default function Home() {
         const config = {
           headers: {
             Accept: 'application/json',
-            Authorization: 'fsq3dVwzOnzP0tuP8fE5mC6DPZUg6ZKJym59TSNTRmMa0dw=',
+            Authorization: process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY,
           },
           params: {
             query: activity,
@@ -106,10 +114,13 @@ export default function Home() {
   }
 
   // Keep track of the form fields' changes using State
-  const onChange = (e, type) => {
-    if (type == 'text') {
-      const { name, value } = e.target
-      setFormValues({ ...formValues, [name]: value })
+  const onChange = async (e, type) => {
+    if (type == 'location') {
+      const { value } = e.target
+      setFormValues({ ...formValues, location: value })
+      if (!value) return
+      const res = await getCities(value)
+      setCitiesList(res.features.map(feat => feat.place_name))
     } else if (type == 'select') {
       const { name } = e
       setFormValues({ ...formValues, [name]: e })
@@ -147,10 +158,16 @@ export default function Home() {
                 <Form.Control
                   type="text"
                   placeholder="Current Location"
-                  name='location'
                   value={formValues.location}
-                  onChange={(e) => onChange(e, "text")}
+                  onChange={(e) => onChange(e, "location")}
+                  autoComplete="off"
+                  list='cities'
                 />
+                <datalist id="cities">
+                  {citiesList.map((city, i) => (
+                    <option key={i}>{city}</option>
+                  ))}
+                </datalist>
               </Form.Group>
             </Row>
             <Row>
@@ -175,7 +192,6 @@ export default function Home() {
                   // closeMenuOnSelect={false}
                   isMulti
                   placeholder='- Select -'
-                  name='activities'
                   value={formValues.activities}
                   onChange={(e) => onChange(e, "activities")}
                 />

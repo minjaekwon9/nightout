@@ -18,7 +18,8 @@ export default function Contact() {
     // Send an email to minjaekwon24601@gmail.com using EmailJS
     const sendEmail = (e) => {
         e.preventDefault()
-        emailjs.sendForm('contact_service', 'contact_form', form.current, '3N2FH8Rf_RLs67D4S')
+        console.log(e.target)
+        emailjs.sendForm('contact_service', 'contact_form', form.current, process.env.NEXT_PUBLIC_EMAILJS_API_KEY)
             .then(() => {
                 Notiflix.Notify.success("Your message has been sent, we will get back to you shortly!",
                     { timeout: 10000, fontSize: "1rem", width: "560px", distance: "70px", position: "center-top", clickToClose: true, })
