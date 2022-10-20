@@ -8,12 +8,15 @@ import Col from 'react-bootstrap/Col'
 import Select from 'react-select'
 import Notiflix from 'notiflix'
 import axios from "axios"
+import DatalistInput from 'react-datalist-input'
+
 
 // CUSTOM IMPORTS
 
 
 const intialFormState = {
   location: '',
+  coords: '',
   numOfStops: '',
   activities: '',
   radius: '',
@@ -69,13 +72,19 @@ export default function Home() {
     })
   }, [])
 
+  // Use the form data to send a get request to the Foursquare Places API
+  async function getPlaces(config, activity) {
+    const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
+    setResData((prevState) => ({ ...prevState, [activity]: res.data }))
+  }
+
   // Find places for the trip using Foursquare
   const findPlaces = (e) => {
     e.preventDefault()
     // Validate forms using Notiflix
     if (!pos) {
       createNotif("fail", "Enter a city name.", "220px")
-    } else if (formValues.location && !citiesList.includes(formValues.location)) {
+    } else if (formValues.location && !citiesList.some(city => city.value === formValues.location)) {
       createNotif("fail", "Select a city.", "175px")
     } else if (!formValues.numOfStops) {
       createNotif("fail", "Select the number of stops.", "295px")
@@ -84,11 +93,8 @@ export default function Home() {
     } else if (!formValues.radius) {
       createNotif("fail", "Select how far you can go.", "285px")
     } else {
-      // Use the form data to send a get request to the Foursquare Places API
-      async function getPlaces(config, activity) {
-        const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
-        setResData((prevState) => ({ ...prevState, [activity]: res.data }))
-      }
+      const location = formValues.location ? { near: formValues.location } : { ll: pos, radius: radius }
+      console.log(location)
       // Send a get request for each stop
       for (let i = 0; i < formValues.numOfStops.value; i++) {
         const activity = formValues.activities[i].value
@@ -100,8 +106,7 @@ export default function Home() {
           },
           params: {
             query: activity,
-            ll: pos,
-            radius: radius,
+            ...location,
             open_now: 'true',
             sort: 'DISTANCE'
           }
@@ -120,7 +125,10 @@ export default function Home() {
       setFormValues({ ...formValues, location: value })
       if (!value) return
       const res = await getCities(value)
-      setCitiesList(res.features.map(feat => feat.place_name))
+      setCitiesList(res.features.map(feat => ({
+        id: feat.place_name,
+        value: feat.place_name,
+      })))
     } else if (type == 'select') {
       const { name } = e
       setFormValues({ ...formValues, [name]: e })
@@ -153,22 +161,16 @@ export default function Home() {
         >
           <Form onSubmit={findPlaces}>
             <Row>
-              <Form.Group className="mb-3" controlId="formLocation">
-                <Form.Label>Where are you located?</Form.Label>
-                <Form.Control
-                  type="text"
+              <Col>
+                <DatalistInput
+                  label="Where are you located?"
                   placeholder="Current Location"
                   value={formValues.location}
-                  onChange={(e) => onChange(e, "location")}
-                  autoComplete="off"
-                  list='cities'
+                  onChange={e => onChange(e, "location")}
+                  onSelect={item => setFormValues({ ...formValues, location: item.value })}
+                  items={[...citiesList]}
                 />
-                <datalist id="cities">
-                  {citiesList.map((city, i) => (
-                    <option key={i}>{city}</option>
-                  ))}
-                </datalist>
-              </Form.Group>
+              </Col>
             </Row>
             <Row>
               <label className='mb-3'>How many stops do you want to make?
@@ -218,6 +220,6 @@ export default function Home() {
           </Form>
         </Container>
       </Container>
-    </div>
+    </div >
   )
 }

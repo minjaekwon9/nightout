@@ -17,8 +17,29 @@ body {
   margin: 0 5vw 0 36px;
 }
 
-/* Planning Form CSS */
-
+/* Trip Planner Form CSS */
 .css-b62m3t-container {
   color: black;
+}
+
+/* React Datalist CSS */
+.react-datalist-input__container {
+  margin-bottom: 27px;
+}
+
+.react-datalist-input__textbox {
+  font-size: 18px;
+  color: black;
+  height: 41px;
+  padding: 0 10px;
+  margin-top: 9px;
+  border-radius: 4px;
+}
+
+.react-datalist-input__listbox {
+  color: black;
+}
+
+.react-datalist-input__listbox-option {
+  background-color: white;
 }
