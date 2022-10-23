@@ -9,13 +9,28 @@ import Select from 'react-select'
 import Notiflix from 'notiflix'
 import axios from "axios"
 import DatalistInput from 'react-datalist-input'
+import Map, { Source, Layer } from 'react-map-gl'
 
 
 // CUSTOM IMPORTS
 
 
+const layerStyle = {
+  id: 'route',
+  type: 'line',
+  layout: {
+    'line-cap': 'round',
+    'line-join': 'round'
+  },
+  paint: {
+    'line-color': '#007cbf',
+    'line-width': 5,
+    'line-opacity': 0.75
+  }
+};
+
 const intialFormState = {
-  location: '',
+  address: '',
   coords: '',
   numOfStops: '',
   activities: '',
@@ -49,8 +64,7 @@ function createNotif(type, message, size) {
 }
 
 async function getCities(input) {
-  const res = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${input}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}&cachebuster=1625641871908&country=us&autocomplete=true&types=place`)
-  console.log(res.data)
+  const res = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${input}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}&country=us&autocomplete=true&proximity=ip&types=address`)
   return res.data
 }
 
@@ -60,12 +74,13 @@ export default function Home() {
   const [citiesList, setCitiesList] = useState([])
   const [formValues, setFormValues] = useState(intialFormState)
   const [resData, setResData] = useState({})
+  const [geojson, setGeojson] = useState({})
 
   useEffect(() => {
     // Check if "geolocation" exists using "?." (null access check) and grab the user's current coordinates if so
     navigator?.geolocation.getCurrentPosition(({ coords: { latitude: lat, longitude: lng } }) => {
-      const pos = { lat, lng }
-      setPos({ pos })
+      const pos = [lat, lng]
+      setPos(pos)
       if (pos) {
         createNotif("success", "Updated the current location.", "310px")
       }
@@ -75,16 +90,25 @@ export default function Home() {
   // Use the form data to send a get request to the Foursquare Places API
   async function getPlaces(config, activity) {
     const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
-    setResData((prevState) => ({ ...prevState, [activity]: res.data }))
+    await setResData((prevState) => ({ ...prevState, [activity]: res.data }))
+  }
+
+  // Send a get request to the Google Maps API to find an optimal route between the stops
+  async function getRoute(ll, stops) {
+    console.log(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`)
+    const res = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`)
+    console.log(res)
+    console.log(res.data)
+    return res.data
   }
 
   // Find places for the trip using Foursquare
-  const findPlaces = (e) => {
+  const findPlaces = async (e) => {
     e.preventDefault()
     // Validate forms using Notiflix
     if (!pos) {
       createNotif("fail", "Enter a city name.", "220px")
-    } else if (formValues.location && !citiesList.some(city => city.value === formValues.location)) {
+    } else if (formValues.address && !citiesList.some(city => city.value === formValues.address)) {
       createNotif("fail", "Select a city.", "175px")
     } else if (!formValues.numOfStops) {
       createNotif("fail", "Select the number of stops.", "295px")
@@ -93,8 +117,7 @@ export default function Home() {
     } else if (!formValues.radius) {
       createNotif("fail", "Select how far you can go.", "285px")
     } else {
-      const location = formValues.location ? { near: formValues.location } : { ll: pos, radius: radius }
-      console.log(location)
+      const ll = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
       // Send a get request for each stop
       for (let i = 0; i < formValues.numOfStops.value; i++) {
         const activity = formValues.activities[i].value
@@ -106,15 +129,27 @@ export default function Home() {
           },
           params: {
             query: activity,
-            ...location,
-            open_now: 'true',
+            ...ll,
+            radius: radius,
+            // open_now: 'true',
             sort: 'DISTANCE'
           }
         }
-        getPlaces(config, activity)
+        await getPlaces(config, activity)
       }
+      console.log(resData)
+      let stops = ''
+      for (const prop in resData) {
+        const coords = resData[prop].results[0].geocodes.main
+        stops += coords.latitude + ',' + coords.longitude + '|'
+      }
+      stops = stops.slice(0, -1)
+      console.log(stops)
+      const data = await getRoute(ll.ll, stops)
+      setGeojson(data)
       // Reset the form fields
       setFormValues(intialFormState)
+      // setResData({})
     }
   }
 
@@ -122,12 +157,13 @@ export default function Home() {
   const onChange = async (e, type) => {
     if (type == 'location') {
       const { value } = e.target
-      setFormValues({ ...formValues, location: value })
+      setFormValues({ ...formValues, address: value })
       if (!value) return
       const res = await getCities(value)
       setCitiesList(res.features.map(feat => ({
         id: feat.place_name,
         value: feat.place_name,
+        coords: feat.geometry.coordinates
       })))
     } else if (type == 'select') {
       const { name } = e
@@ -165,9 +201,9 @@ export default function Home() {
                 <DatalistInput
                   label="Where are you located?"
                   placeholder="Current Location"
-                  value={formValues.location}
+                  value={formValues.address}
                   onChange={e => onChange(e, "location")}
-                  onSelect={item => setFormValues({ ...formValues, location: item.value })}
+                  onSelect={item => setFormValues({ ...formValues, address: item.value, coords: item.coords.reverse() })}
                   items={[...citiesList]}
                 />
               </Col>
@@ -218,6 +254,22 @@ export default function Home() {
               </Button>
             </div>
           </Form>
+        </Container>
+        <Container>
+          <Map reuseMaps
+            initialViewState={{
+              longitude: -84.5,
+              latitude: 39.1,
+              zoom: 10
+            }}
+            style={{ width: 600, height: 400 }}
+            mapStyle="mapbox://styles/mapbox/streets-v9"
+            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_API_KEY}
+          >
+            <Source id="my-data" type="geojson" data={geojson}>
+              <Layer {...layerStyle} />
+            </Source>
+          </Map>
         </Container>
       </Container>
     </div >
