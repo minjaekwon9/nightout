@@ -1,5 +1,5 @@
 // LIBRARY IMPORTS
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Container from 'react-bootstrap/Container'
@@ -9,25 +9,9 @@ import Select from 'react-select'
 import Notiflix from 'notiflix'
 import axios from "axios"
 import DatalistInput from 'react-datalist-input'
-import Map, { Source, Layer } from 'react-map-gl'
 
 
 // CUSTOM IMPORTS
-
-
-const layerStyle = {
-  id: 'route',
-  type: 'line',
-  layout: {
-    'line-cap': 'round',
-    'line-join': 'round'
-  },
-  paint: {
-    'line-color': '#007cbf',
-    'line-width': 5,
-    'line-opacity': 0.75
-  }
-};
 
 const intialFormState = {
   address: '',
@@ -75,6 +59,7 @@ export default function Home() {
   const [formValues, setFormValues] = useState(intialFormState)
   const [resData, setResData] = useState({})
   const [geojson, setGeojson] = useState({})
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     // Check if "geolocation" exists using "?." (null access check) and grab the user's current coordinates if so
@@ -87,19 +72,46 @@ export default function Home() {
     })
   }, [])
 
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    try {
+      if (Object.keys(resData).length === formValues.numOfStops.value) {
+        const ll = formValues.coords ? formValues.coords.join() : pos.join()
+        let stops = ''
+        for (const prop in resData) {
+          const coords = resData[prop].results[0].geocodes.main
+          stops += coords.latitude + ',' + coords.longitude + '|'
+        }
+        stops = stops.slice(0, -1)
+        console.log(stops)
+        getRoute(ll, stops)
+      }
+    } catch (e) {
+      console.log(e)
+      console.log('Failed to call the Google Maps API')
+    }
+  }, [resData])
+
   // Use the form data to send a get request to the Foursquare Places API
   async function getPlaces(config, activity) {
     const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
-    await setResData((prevState) => ({ ...prevState, [activity]: res.data }))
+    setResData((prevState) => ({ ...prevState, [activity]: res.data }))
   }
 
   // Send a get request to the Google Maps API to find an optimal route between the stops
   async function getRoute(ll, stops) {
-    console.log(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`)
-    const res = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`)
-    console.log(res)
+    const config = {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+      }
+    }
+    const res = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`, config)
+    setGeojson(res.data)
     console.log(res.data)
-    return res.data
   }
 
   // Find places for the trip using Foursquare
@@ -135,21 +147,10 @@ export default function Home() {
             sort: 'DISTANCE'
           }
         }
-        await getPlaces(config, activity)
+        getPlaces(config, activity)
       }
-      console.log(resData)
-      let stops = ''
-      for (const prop in resData) {
-        const coords = resData[prop].results[0].geocodes.main
-        stops += coords.latitude + ',' + coords.longitude + '|'
-      }
-      stops = stops.slice(0, -1)
-      console.log(stops)
-      const data = await getRoute(ll.ll, stops)
-      setGeojson(data)
       // Reset the form fields
-      setFormValues(intialFormState)
-      // setResData({})
+      // setFormValues(intialFormState)
     }
   }
 
@@ -256,20 +257,7 @@ export default function Home() {
           </Form>
         </Container>
         <Container>
-          <Map reuseMaps
-            initialViewState={{
-              longitude: -84.5,
-              latitude: 39.1,
-              zoom: 10
-            }}
-            style={{ width: 600, height: 400 }}
-            mapStyle="mapbox://styles/mapbox/streets-v9"
-            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_API_KEY}
-          >
-            <Source id="my-data" type="geojson" data={geojson}>
-              <Layer {...layerStyle} />
-            </Source>
-          </Map>
+
         </Container>
       </Container>
     </div >
