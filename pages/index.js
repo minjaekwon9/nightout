@@ -9,7 +9,6 @@ import Select from 'react-select'
 import Notiflix from 'notiflix'
 import axios from "axios"
 import DatalistInput from 'react-datalist-input'
-import { Client } from "@googlemaps/google-maps-services-js"
 
 
 // CUSTOM IMPORTS
@@ -43,15 +42,19 @@ const radius = [
   { value: 50, label: '50 miles', name: 'radius' },
 ]
 
-const client = new Client({})
-
 function createNotif(type, message, size) {
   if (type === "success") return Notiflix.Notify.success(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
   if (type === "fail") return Notiflix.Notify.failure(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
 }
 
 async function getCities(input) {
-  const res = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${input}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}&country=us&autocomplete=true&proximity=ip&types=address`)
+  const config = {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+    }
+  }
+  const res = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${input}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}&country=us&autocomplete=true&proximity=ip&types=address`, config)
   return res.data
 }
 
@@ -105,21 +108,16 @@ export default function Home() {
   }
 
   // Send a get request to the Google Maps API to find an optimal route between the stops
-  function getRoute(ll, stops) {
-    // const res = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`)
-    client
-      .directions({
-        params: {
-          origin: ll,
-          destination: ll,
-          key: process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY
-        },
-        timeout: 1000
-      }).then((res) => {
-        console.log(res.data)
-      })
-    // setGeojson(res.data)
-    // console.log(res.data)
+  async function getRoute(ll, stops) {
+    const config = {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+      }
+    }
+    const res = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`, config)
+    setGeojson(res.data)
+    console.log(res.data)
   }
 
   // Find places for the trip using Foursquare
@@ -147,7 +145,7 @@ export default function Home() {
             Accept: 'application/json',
             Authorization: process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY,
             "Access-Control-Allow-Origin": "*",
-            'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+            "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
           },
           params: {
             query: activity,
