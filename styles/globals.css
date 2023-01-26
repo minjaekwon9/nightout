@@ -43,3 +43,17 @@ body {
 .react-datalist-input__listbox-option {
   background-color: white;
 }
+
+/* Spinner CSS */
+.loading {
+  height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Map CSS */
+.map {
+  height: 80vh;
+  width: auto;
+}
