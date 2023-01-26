@@ -1,5 +1,4 @@
 // LIBRARY IMPORTS
-import Head from 'next/head'
 import "bootstrap/dist/css/bootstrap.min.css"
 import "notiflix/dist/notiflix-3.2.5.min.css"
 import "notiflix/dist/notiflix-3.2.5.min.js"

@@ -10,37 +10,9 @@ import Notiflix from 'notiflix'
 import axios from "axios"
 import DatalistInput from 'react-datalist-input'
 
-
 // CUSTOM IMPORTS
+import * as Constants from '../constants/constants'
 
-const intialFormState = {
-  address: '',
-  coords: '',
-  numOfStops: '',
-  activities: '',
-  radius: '',
-}
-
-// Initialize the select options for React Select
-const numOfStops = [
-  { value: 1, label: 'One', name: 'numOfStops' },
-  { value: 2, label: 'Two', name: 'numOfStops' },
-  { value: 3, label: 'Three', name: 'numOfStops' },
-  { value: 4, label: 'Four', name: 'numOfStops' },
-]
-const activities = [
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'dessert', label: 'Dessert' },
-  { value: 'bar', label: 'Bar' },
-  { value: 'entertainment', label: 'Entertainment' },
-]
-const radius = [
-  { value: 5, label: '5 miles', name: 'radius' },
-  { value: 10, label: '10 miles', name: 'radius' },
-  { value: 15, label: '15 miles', name: 'radius' },
-  { value: 25, label: '25 miles', name: 'radius' },
-  { value: 50, label: '50 miles', name: 'radius' },
-]
 
 // Creates a notifications when performing specific actions
 function createNotif(type, message, size) {
@@ -58,7 +30,7 @@ export default function Home() {
 
   const [pos, setPos] = useState()
   const [citiesList, setCitiesList] = useState([])
-  const [formValues, setFormValues] = useState(intialFormState)
+  const [formValues, setFormValues] = useState(Constants.initialFormState)
   const [resData, setResData] = useState({})
   const [geojson, setGeojson] = useState({})
   const isFirstRender = useRef(true);
@@ -218,7 +190,7 @@ export default function Home() {
                 <Select
                   className='py-2'
                   instanceId="formStops"
-                  options={numOfStops}
+                  options={Constants.numOfStops}
                   placeholder='- Select -'
                   name='numOfStops'
                   value={formValues.numOfStops}
@@ -231,7 +203,7 @@ export default function Home() {
                 <Select
                   className='py-2'
                   instanceId="formActivities"
-                  options={activities}
+                  options={Constants.activities}
                   // closeMenuOnSelect={false}
                   isMulti
                   placeholder='- Select -'
@@ -245,7 +217,7 @@ export default function Home() {
                 <Select
                   className='py-2'
                   instanceId="formRadius"
-                  options={radius}
+                  options={Constants.radius}
                   placeholder='- Select -'
                   name='radius'
                   value={formValues.radius}
@@ -259,9 +231,6 @@ export default function Home() {
               </Button>
             </div>
           </Form>
-        </Container>
-        <Container>
-
         </Container>
       </Container>
     </div >

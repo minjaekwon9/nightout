@@ -25,14 +25,14 @@ function App() {
     const [duration, setDuration] = useState('')
 
     const originRef = useRef()
-    const destiantionRef = useRef()
+    const destinationRef = useRef()
 
     async function calculateRoute() {
-        if (originRef.current.value === '' || destiantionRef.current.value === '') {
+        if (originRef.current.value === '' || destinationRef.current.value === '') {
             return
         }
         console.log(originRef.current.value)
-        console.log(destiantionRef.current.value)
+        console.log(destinationRef.current.value)
         const bubb = "7509 Balmoral Way, San Ramon, CA, USA"
         // eslint-disable-next-line no-undef
         const directionsService = new google.maps.DirectionsService()
@@ -55,7 +55,7 @@ function App() {
         setDistance('')
         setDuration('')
         originRef.current.value = ''
-        destiantionRef.current.value = ''
+        destinationRef.current.value = ''
     }
 
     if (!isLoaded) {
@@ -89,7 +89,7 @@ function App() {
                 </GoogleMap>
             </div>
             <input type='text' placeholder='Origin' ref={originRef} />
-            <input type='text' placeholder='Destination' ref={destiantionRef} />
+            <input type='text' placeholder='Destination' ref={destinationRef} />
             <button type='submit' onClick={calculateRoute}>
                 Calculate Route
             </button>

@@ -8,8 +8,6 @@ import Row from 'react-bootstrap/Row'
 import emailjs from '@emailjs/browser'
 import Notiflix from 'notiflix'
 
-// CUSTOM IMPORTS
-
 
 export default function Contact() {
 

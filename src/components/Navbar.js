@@ -3,12 +3,10 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 // CUSTOM IMPORTS
 
-
-//LIBRARY IMPORTS
-import Link from 'next/link';
 
 export default function NavBar() {
 
