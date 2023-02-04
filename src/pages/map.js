@@ -34,12 +34,11 @@ function App() {
         console.log(originRef.current.value)
         console.log(destinationRef.current.value)
         const bubb = "7509 Balmoral Way, San Ramon, CA, USA"
-        // eslint-disable-next-line no-undef
         const directionsService = new google.maps.DirectionsService()
         const results = await directionsService.route({
             origin: "207 Cullens Court, San Ramon, CA, USA",
-            destination: "351 Enfield St, San Ramon, CA, USA",
-            // eslint-disable-next-line no-undef
+            destination: "Safeway, 11050 Bollinger Canyon Rd San Ramon, CA, USA",
+
             travelMode: google.maps.TravelMode.DRIVING,
             waypoints: [{ location: "7509 Balmoral Way, San Ramon, CA, USA", stopover: true }, { location: "1272 Halifax Way, San Ramon, CA, USA", stopover: true }],
             // optimizeWaypoints: true

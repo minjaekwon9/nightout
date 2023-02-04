@@ -21,6 +21,7 @@ export const activities = [
     { value: 'dessert', label: 'Dessert' },
     { value: 'bar', label: 'Bar' },
     { value: 'entertainment', label: 'Entertainment' },
+    { value: 'coffee', label: 'Coffee' },
 ]
 export const radius = [
     { value: 5, label: '5 miles', name: 'radius' },

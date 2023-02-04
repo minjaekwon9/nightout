@@ -15,9 +15,9 @@ export default function NavBar() {
     return (
         <Navbar bg="dark" variant="dark" expand="lg">
             <Container fluid className='ms-4'>
-                <Navbar.Brand href="#home">
+                <Navbar.Brand href="/">
                     <img
-                        src="icon.svg"
+                        src="/icon.svg"
                         width="30"
                         height="30"
                         className="d-inline-block align-top me-2"

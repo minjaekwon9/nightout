@@ -1,5 +1,6 @@
 // LIBRARY IMPORTS
 import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/router'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Container from 'react-bootstrap/Container'
@@ -11,7 +12,7 @@ import axios from "axios"
 import DatalistInput from 'react-datalist-input'
 
 // CUSTOM IMPORTS
-import * as Constants from '../constants/constants'
+import * as Constants from '../constants/Constants'
 
 
 // Creates a notifications when performing specific actions
@@ -31,9 +32,8 @@ export default function Home() {
   const [pos, setPos] = useState()
   const [citiesList, setCitiesList] = useState([])
   const [formValues, setFormValues] = useState(Constants.initialFormState)
-  const [resData, setResData] = useState({})
-  const [geojson, setGeojson] = useState({})
-  const isFirstRender = useRef(true);
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     // Check if "geolocation" exists using "?." (null access check) and grab the user's current coordinates if so
@@ -46,46 +46,12 @@ export default function Home() {
     })
   }, [])
 
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    try {
-      if (Object.keys(resData).length === formValues.numOfStops.value) {
-        const ll = formValues.coords ? formValues.coords.join() : pos.join()
-        let stops = ''
-        for (const prop in resData) {
-          const coords = resData[prop].results[0].geocodes.main
-          stops += coords.latitude + ',' + coords.longitude + '|'
-        }
-        stops = stops.slice(0, -1)
-        console.log(stops)
-        getRoute(ll, stops)
-      }
-    } catch (e) {
-      console.log(e)
-      console.log('Failed to call the Google Maps API')
-    }
-  }, [resData])
-
   // Use the form data to send a get request to the Foursquare Places API
-  async function getPlaces(config, activity) {
+  async function getPlaces(config) {
     const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
-    setResData((prevState) => ({ ...prevState, [activity]: res.data }))
-  }
-
-  // Send a get request to the Google Maps API to find an optimal route between the stops
-  async function getRoute(ll, stops) {
-    const config = {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
-      }
-    }
-    const res = await axios.get(`https://maps.googleapis.com/maps/api/directions/json?origin=${ll}&destination=${ll}&waypoints=optimize:true|${stops}&key=${process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY}`, config)
-    setGeojson(res.data)
-    console.log(res.data)
+    const coord = res.data.results[0].geocodes.main
+    const stop = coord.latitude + ',' + coord.longitude
+    return stop
   }
 
   // Find places for the trip using Foursquare
@@ -93,9 +59,9 @@ export default function Home() {
     e.preventDefault()
     // Validate forms using Notiflix
     if (!pos) {
-      createNotif("fail", "Enter a city name.", "220px")
+      createNotif("fail", "Enter your address.", "220px")
     } else if (formValues.address && !citiesList.some(city => city.value === formValues.address)) {
-      createNotif("fail", "Select a city.", "175px")
+      createNotif("fail", "Select your address.", "175px")
     } else if (!formValues.numOfStops) {
       createNotif("fail", "Select the number of stops.", "295px")
     } else if (!formValues.activities || formValues.activities.length != formValues.numOfStops.value) {
@@ -103,30 +69,39 @@ export default function Home() {
     } else if (!formValues.radius) {
       createNotif("fail", "Select how far you can go.", "285px")
     } else {
-      const ll = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
-      // Send a get request for each stop
-      for (let i = 0; i < formValues.numOfStops.value; i++) {
-        const activity = formValues.activities[i].value
-        const radius = formValues.radius.value * 1609
-        const config = {
-          headers: {
-            Accept: 'application/json',
-            Authorization: process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY,
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
-          },
-          params: {
-            query: activity,
-            ...ll,
-            radius: radius,
-            // open_now: 'true',
-            sort: 'DISTANCE'
+      try {
+        setLoading(true)
+        const ll = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
+        const query = { origin: ll.ll }
+        // Send a get request for each stop
+        for (let i = 0; i < formValues.numOfStops.value; i++) {
+          const activity = formValues.activities[i].value
+          const radius = formValues.radius.value * 1609
+          const config = {
+            headers: {
+              Accept: 'application/json',
+              Authorization: process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY,
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+            },
+            params: {
+              query: activity,
+              ...ll,
+              radius: radius,
+              // open_now: 'true',
+              sort: 'DISTANCE'
+            }
           }
+          query[i + 1] = await getPlaces(config)
         }
-        getPlaces(config, activity)
+        router.push({
+          pathname: '/map',
+          query: { ...query }
+        })
+      } catch (error) {
+        setLoading(false)
+        console.log(error)
       }
-      // Reset the form fields
-      // setFormValues(intialFormState)
     }
   }
 
@@ -227,7 +202,7 @@ export default function Home() {
             </Row>
             <div className='text-center'>
               <Button variant="outline-light" type="submit">
-                Submit
+                {loading ? 'Loading...' : 'Submit'}
               </Button>
             </div>
           </Form>
