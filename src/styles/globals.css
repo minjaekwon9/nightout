@@ -54,6 +54,7 @@ body {
 
 /* Map CSS */
 .map {
-  height: 80vh;
+  height: 70vh;
   width: auto;
+  margin: 2% 10% 1% 10%;
 }

@@ -1,5 +1,6 @@
 // LIBRARY IMPORTS
 import { useRef, useState } from 'react'
+import { useRouter } from 'next/router';
 import Spinner from 'react-bootstrap/Spinner';
 import {
     useJsApiLoader,
@@ -7,54 +8,50 @@ import {
     Marker,
     DirectionsRenderer,
 } from '@react-google-maps/api'
+import { useEffect } from 'react';
 
 // CUSTOM IMPORTS
 
-
+// Map's center is set to San Francisco
 const center = { lat: 37.7749, lng: -122.4194 }
+// Google APIs used
+const APIs = ['places']
 
 function App() {
-    const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY,
-        libraries: ['places'],
-    })
-
+    const router = useRouter()
+    let query = Object.values(router.query)
     const [map, setMap] = useState(null)
     const [directionsResponse, setDirectionsResponse] = useState(null)
     const [distance, setDistance] = useState('')
     const [duration, setDuration] = useState('')
 
-    const originRef = useRef()
-    const destinationRef = useRef()
+    const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY,
+        libraries: APIs
+    })
+
+    useEffect(() => {
+        if (!isLoaded) return
+        calculateRoute()
+    }, [isLoaded])
 
     async function calculateRoute() {
-        if (originRef.current.value === '' || destinationRef.current.value === '') {
-            return
-        }
-        console.log(originRef.current.value)
-        console.log(destinationRef.current.value)
-        const bubb = "7509 Balmoral Way, San Ramon, CA, USA"
         const directionsService = new google.maps.DirectionsService()
+        const origin = query.shift()
+        const destination = query.pop()
+        const waypoints = []
+        query.forEach(waypoint => waypoints.push({ location: waypoint, stopover: true }))
         const results = await directionsService.route({
-            origin: "207 Cullens Court, San Ramon, CA, USA",
-            destination: "Safeway, 11050 Bollinger Canyon Rd San Ramon, CA, USA",
-
+            origin: origin,
+            destination: destination,
             travelMode: google.maps.TravelMode.DRIVING,
-            waypoints: [{ location: "7509 Balmoral Way, San Ramon, CA, USA", stopover: true }, { location: "1272 Halifax Way, San Ramon, CA, USA", stopover: true }],
+            waypoints: waypoints,
             // optimizeWaypoints: true
         })
         console.log(results)
         setDirectionsResponse(results)
         setDistance(results.routes[0].legs[0].distance.text)
         setDuration(results.routes[0].legs[0].duration.text)
-    }
-
-    function clearRoute() {
-        setDirectionsResponse(null)
-        setDistance('')
-        setDuration('')
-        originRef.current.value = ''
-        destinationRef.current.value = ''
     }
 
     if (!isLoaded) {
@@ -74,10 +71,10 @@ function App() {
                     zoom={15}
                     mapContainerStyle={{ width: '100%', height: '100%' }}
                     options={{
-                        zoomControl: false,
+                        zoomControl: true,
                         streetViewControl: false,
-                        mapTypeControl: false,
-                        fullscreenControl: false,
+                        mapTypeControl: true,
+                        fullscreenControl: true,
                     }}
                     onLoad={map => setMap(map)}
                 >
@@ -87,19 +84,8 @@ function App() {
                     )}
                 </GoogleMap>
             </div>
-            <input type='text' placeholder='Origin' ref={originRef} />
-            <input type='text' placeholder='Destination' ref={destinationRef} />
-            <button type='submit' onClick={calculateRoute}>
-                Calculate Route
-            </button>
             <p>Distance: {distance} </p>
             <p>Duration: {duration} </p>
-            <button onClick={() => {
-                map.panTo(center)
-                map.setZoom(15)
-            }}>
-                Jump to center
-            </button>
         </div >
     )
 }
