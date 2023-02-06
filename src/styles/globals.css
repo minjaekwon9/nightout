@@ -44,6 +44,11 @@ body {
   background-color: white;
 }
 
+.react-datalist-input__listbox-option mark {
+  background: transparent;
+  padding: 0;
+}
+
 /* Spinner CSS */
 .loading {
   height: 80vh;
@@ -56,5 +61,22 @@ body {
 .map {
   height: 70vh;
   width: auto;
-  margin: 2% 10% 1% 10%;
+  margin: 10% 5% 0 15%;
+}
+
+.mapInfo {
+  height: 70vh;
+  max-width: 500px;
+  margin: 10% 15% 0 5%;
+  background-color: #F2F2F2;
+  border: 3px solid #3B3B3B;
+  border-radius: 5px;
+  color: #181818;
+}
+
+.mapInfoHeader {
+  padding: 10px;
+  background-color: #3B3B3B;
+  text-align: center;
+  color: white;
 }

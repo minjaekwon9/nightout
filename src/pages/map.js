@@ -1,14 +1,16 @@
 // LIBRARY IMPORTS
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/router';
 import Spinner from 'react-bootstrap/Spinner';
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
 import {
     useJsApiLoader,
     GoogleMap,
     Marker,
     DirectionsRenderer,
 } from '@react-google-maps/api'
-import { useEffect } from 'react';
 
 // CUSTOM IMPORTS
 
@@ -63,30 +65,43 @@ function App() {
     }
 
     return (
-        <div>
-            {/* Google Map Box */}
-            <div className='map'>
-                <GoogleMap
-                    center={center}
-                    zoom={15}
-                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                    options={{
-                        zoomControl: true,
-                        streetViewControl: false,
-                        mapTypeControl: true,
-                        fullscreenControl: true,
-                    }}
-                    onLoad={map => setMap(map)}
-                >
-                    <Marker position={center} />
-                    {directionsResponse && (
-                        <DirectionsRenderer directions={directionsResponse} />
-                    )}
-                </GoogleMap>
-            </div>
-            <p>Distance: {distance} </p>
-            <p>Duration: {duration} </p>
-        </div >
+        <Container fluid>
+            <Row>
+                <Col>
+                    {/* Google Map Box */}
+                    <div className='map'>
+                        <GoogleMap
+                            center={center}
+                            zoom={15}
+                            mapContainerStyle={{ width: '100%', height: '100%', borderRadius: '5px' }}
+                            options={{
+                                zoomControl: true,
+                                streetViewControl: false,
+                                mapTypeControl: true,
+                                fullscreenControl: true,
+                            }}
+                            onLoad={map => setMap(map)}
+                        >
+                            <Marker position={center} />
+                            {directionsResponse && (
+                                <DirectionsRenderer directions={directionsResponse} />
+                            )}
+                        </GoogleMap>
+                    </div>
+                </Col>
+                <Col>
+                    <div className='mapInfo'>
+                        <div className='mapInfoHeader'>
+                            <h4>Trip Details</h4>
+                        </div>
+                        <div>
+                            <p>Distance: {distance} </p>
+                            <p>Duration: {duration} </p>
+                        </div>
+                    </div>
+                </Col>
+            </Row>
+        </Container>
     )
 }
 

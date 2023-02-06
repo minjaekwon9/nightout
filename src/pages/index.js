@@ -49,9 +49,10 @@ export default function Home() {
   // Use the form data to send a get request to the Foursquare Places API
   async function getPlaces(config) {
     const res = await axios.get('https://api.foursquare.com/v3/places/search', config)
-    const coord = res.data.results[0].geocodes.main
-    const stop = coord.latitude + ',' + coord.longitude
-    return stop
+    const name = res.data.results[0].name
+    const coords = res.data.results[0].geocodes.main.latitude + ',' + res.data.results[0].geocodes.main.longitude
+    const locationData = { name, coords }
+    return locationData
   }
 
   // Keep track of the form fields' changes using State
@@ -100,8 +101,9 @@ export default function Home() {
     } else {
       try {
         setLoading(true)
-        const ll = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
-        const query = { 1: ll.ll }
+        const name = formValues.address ? formValues.address.split(",")[0] : 'Current Location'
+        const coords = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
+        const query = { 1: { name, coords: coords.ll } }
         // Send a get request for each stop
         for (let i = 0; i < formValues.numOfStops.value; i++) {
           const activity = formValues.activities[i].value
@@ -115,18 +117,19 @@ export default function Home() {
             },
             params: {
               query: activity,
-              ...ll,
+              ...coords,
               radius: radius,
               // open_now: 'true',
               sort: 'DISTANCE'
             }
           }
           query[i + 2] = await getPlaces(config)
+          console.log(query)
         }
-        router.push({
-          pathname: '/map',
-          query: { ...query }
-        })
+        // router.push({
+        //   pathname: '/map',
+        //   query: { ...query }
+        // })
       } catch (error) {
         setLoading(false)
         console.log(error)
@@ -137,9 +140,20 @@ export default function Home() {
   return (
     <div>
       <Container className='my-5'>
+        <Row>
+          <Col className='d-flex justify-content-center align-items-center'>
+            <img
+              src="/icon.svg"
+              width="50"
+              height="50"
+              className="d-inline me-2 mb-2"
+              alt="NightOut logo"
+            />
+            <h1 className='d-inline-block display-4'>NightOut</h1>
+          </Col>
+        </Row>
         <Row className='text-center'>
           <Col>
-            <h1 className='display-4'>NightOut</h1>
             <h1 className='display-6'>Use NightOut to plan your next outing wherever you are or whatever you want to do!</h1>
           </Col>
         </Row>
@@ -201,9 +215,14 @@ export default function Home() {
               </label>
             </Row>
             <div className='text-center'>
-              <Button variant="outline-light" type="submit">
-                {loading ? 'Loading...' : 'Submit'}
-              </Button>
+              {!loading ?
+                <Button variant="outline-light" type="submit">
+                  Submit
+                </Button> :
+                <Button variant="outline-light" disabled>
+                  Loading...
+                </Button>
+              }
             </div>
           </Form>
         </Container>
