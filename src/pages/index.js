@@ -52,7 +52,7 @@ export default function Home() {
     const name = res.data.results[0].name
     const coords = res.data.results[0].geocodes.main.latitude + ',' + res.data.results[0].geocodes.main.longitude
     const locationData = { name, coords }
-    return locationData
+    return JSON.stringify(locationData)
   }
 
   // Keep track of the form fields' changes using State
@@ -103,7 +103,7 @@ export default function Home() {
         setLoading(true)
         const name = formValues.address ? formValues.address.split(",")[0] : 'Current Location'
         const coords = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
-        const query = { 1: { name, coords: coords.ll } }
+        const query = { 1: JSON.stringify({ name, coords: coords.ll }) }
         // Send a get request for each stop
         for (let i = 0; i < formValues.numOfStops.value; i++) {
           const activity = formValues.activities[i].value
@@ -124,12 +124,11 @@ export default function Home() {
             }
           }
           query[i + 2] = await getPlaces(config)
-          console.log(query)
         }
-        // router.push({
-        //   pathname: '/map',
-        //   query: { ...query }
-        // })
+        router.push({
+          pathname: '/map',
+          query: { ...query }
+        })
       } catch (error) {
         setLoading(false)
         console.log(error)

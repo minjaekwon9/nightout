@@ -21,11 +21,12 @@ const APIs = ['places']
 
 function App() {
     const router = useRouter()
-    let query = Object.values(router.query)
+    const query = router.query
     const [map, setMap] = useState(null)
+    const [names, setNames] = useState([])
     const [directionsResponse, setDirectionsResponse] = useState(null)
-    const [distance, setDistance] = useState('')
-    const [duration, setDuration] = useState('')
+    const [distances, setDistances] = useState([])
+    const [durations, setDurations] = useState([])
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY,
@@ -39,10 +40,21 @@ function App() {
 
     async function calculateRoute() {
         const directionsService = new google.maps.DirectionsService()
-        const origin = query.shift()
-        const destination = query.pop()
-        const waypoints = []
-        query.forEach(waypoint => waypoints.push({ location: waypoint, stopover: true }))
+        const len = Object.keys(query).length
+        let origin = ''
+        let destination = ''
+        let waypoints = []
+        for (let i = 1; i <= len; i++) {
+            const stop = JSON.parse(query[i])
+            setNames(names => [...names, stop.name])
+            if (i === 1) {
+                origin = stop.coords
+            } else if (i === len) {
+                destination = stop.coords
+            } else {
+                waypoints.push({ location: stop.coords, stopover: true })
+            }
+        }
         const results = await directionsService.route({
             origin: origin,
             destination: destination,
@@ -50,10 +62,12 @@ function App() {
             waypoints: waypoints,
             // optimizeWaypoints: true
         })
-        console.log(results)
         setDirectionsResponse(results)
-        setDistance(results.routes[0].legs[0].distance.text)
-        setDuration(results.routes[0].legs[0].duration.text)
+        const tripInfo = results.routes[0].legs
+        for (let i = 0; i < tripInfo.length; i++) {
+            setDistances(distances => [...distances, tripInfo[i].distance.text])
+            setDurations(durations => [...durations, tripInfo[i].duration.text])
+        }
     }
 
     if (!isLoaded) {
@@ -95,8 +109,8 @@ function App() {
                             <h4>Trip Details</h4>
                         </div>
                         <div>
-                            <p>Distance: {distance} </p>
-                            <p>Duration: {duration} </p>
+                            <p>Distance: </p>
+                            <p>Duration: </p>
                         </div>
                     </div>
                 </Col>
