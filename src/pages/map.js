@@ -108,10 +108,33 @@ function App() {
                         <div className='mapInfoHeader'>
                             <h4>Trip Details</h4>
                         </div>
-                        <div>
-                            <p>Distance: </p>
-                            <p>Duration: </p>
-                        </div>
+                        <Container>
+                            <Row>
+                                <Col>
+                                    {names.map((name, index) => {
+                                        return (
+                                            index < names.length - 1 &&
+                                            <div>
+                                                <div>
+                                                    From {name}
+                                                </div>
+                                                <div>
+                                                    To {names[index + 1]}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </Col>
+                                <Col>
+                                    {distances.map((distance, index) => (
+                                        <div>
+                                            <p>{distance}</p>
+                                            <p>{durations[index]}</p>
+                                        </div>
+                                    ))}
+                                </Col>
+                            </Row>
+                        </Container>
                     </div>
                 </Col>
             </Row>
