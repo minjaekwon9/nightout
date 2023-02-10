@@ -1,6 +1,6 @@
-// Index.js
+// index.js
 
-// Initializing form with empty strings
+// Initialize form with empty strings
 export const initialFormState = {
     address: '',
     coords: '',
@@ -30,3 +30,9 @@ export const radius = [
     { value: 25, label: '25 miles', name: 'radius' },
     { value: 50, label: '50 miles', name: 'radius' },
 ]
+
+// map.js
+
+// Alphabet for use in Map Details
+export const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+
