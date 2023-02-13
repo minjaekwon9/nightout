@@ -83,6 +83,15 @@ body {
   color: white;
 }
 
+.mapInfoText {
+  all: unset;
+  color: #a0a09f;
+}
+
+.mapInfoText:hover {
+  color: white;
+}
+
 .mapList {
   list-style: none;
   padding: 0;
@@ -91,4 +100,36 @@ body {
 
 .mapListItem {
   margin: 20px;
+}
+
+.popup-content {
+  border-radius: 5px;
+  max-width: 600px;
+}
+
+.mapPopup {
+  color: black;
+  margin: 15px;
+}
+
+.mapPopup>h4 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.mapPopup>.close {
+  cursor: pointer;
+  position: absolute;
+  display: block;
+  right: 5px;
+  top: 5px;
+  line-height: 20px;
+  color: #848482;
+  font-size: 24px;
+  background: #ffffff;
+  border: none;
+}
+
+.mapPopup>.close:hover {
+  color: black;
 }

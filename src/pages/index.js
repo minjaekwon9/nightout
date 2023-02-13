@@ -15,14 +15,14 @@ import DatalistInput from 'react-datalist-input'
 import * as Constants from '../constants/Constants'
 
 
-// Creates a notifications when performing specific actions
+// Create a notifications when performing specific actions
 function createNotif(type, message, size) {
   if (type === "success") return Notiflix.Notify.success(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
   if (type === "fail") return Notiflix.Notify.failure(message, { timeout: 2000, fontSize: "1rem", width: size, position: "center-top", distance: "65px", clickToClose: true, showOnlyTheLastOne: true })
 }
 
-// Fetches a list of potential addresses in the US from the provided input
-async function getCities(input) {
+// Fetch a list of potential addresses in the US from the provided input using the Mapbox Geocoding API
+async function getAddresses(input) {
   const res = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${input}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_API_KEY}&country=us&autocomplete=true&proximity=ip&types=address`)
   return res.data
 }
@@ -30,7 +30,7 @@ async function getCities(input) {
 export default function Home() {
 
   const [pos, setPos] = useState()
-  const [citiesList, setCitiesList] = useState([])
+  const [addressList, setAddressList] = useState([])
   const [formValues, setFormValues] = useState(Constants.initialFormState)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -57,12 +57,14 @@ export default function Home() {
 
   // Keep track of the form fields' changes using State
   const onChange = async (e, type) => {
+    // Alter behavior based on which form field is being changed
     if (type == 'location') {
+      // Display a list of addresses that match the input
       const { value } = e.target
       setFormValues({ ...formValues, address: value })
       if (!value) return
-      const res = await getCities(value)
-      setCitiesList(res.features.map(feat => ({
+      const res = await getAddresses(value)
+      setAddressList(res.features.map(feat => ({
         id: feat.place_name,
         value: feat.place_name,
         coords: feat.geometry.coordinates
@@ -90,7 +92,7 @@ export default function Home() {
     // Validate forms using Notiflix
     if (!pos) {
       createNotif("fail", "Enter your address.", "220px")
-    } else if (formValues.address && !citiesList.some(city => city.value === formValues.address)) {
+    } else if (formValues.address && !addressList.some(city => city.value === formValues.address)) {
       createNotif("fail", "Select your address.", "175px")
     } else if (!formValues.numOfStops) {
       createNotif("fail", "Select the number of stops.", "295px")
@@ -104,9 +106,10 @@ export default function Home() {
         const name = formValues.address ? formValues.address.split(",")[0] : 'Current Location'
         const coords = formValues.coords ? { ll: formValues.coords.join() } : { ll: pos.join() }
         const query = { 1: JSON.stringify({ name, coords: coords.ll }) }
-        // Send a get request for each stop
+        // Send a get request to the Foursquare Places API for each stop
         for (let i = 0; i < formValues.numOfStops.value; i++) {
           const activity = formValues.activities[i].value
+          // Convert radius from miles to meters
           const radius = formValues.radius.value * 1609
           const config = {
             headers: {
@@ -160,16 +163,18 @@ export default function Home() {
           className='py-4 rounded'
           style={{ maxWidth: 550 }}
         >
+          {/* React Bootstrap Form used to input the requirements for your day trip */}
           <Form onSubmit={findPlaces}>
             <Row>
               <Col>
+                {/* Datalist displays the address list received from the Mapbox API */}
                 <DatalistInput
                   label="Where are you located?"
                   placeholder="Current Location"
                   value={formValues.address}
                   onChange={e => onChange(e, "location")}
                   onSelect={item => setFormValues({ ...formValues, address: item.value, coords: item.coords.reverse() })}
-                  items={[...citiesList]}
+                  items={[...addressList]}
                 />
               </Col>
             </Row>
