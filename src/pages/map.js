@@ -15,6 +15,7 @@ import {
 } from '@react-google-maps/api'
 import { v4 as uuid } from 'uuid'
 import Popup from 'reactjs-popup'
+import axios from "axios"
 import emailjs from '@emailjs/browser'
 import Notiflix from 'notiflix'
 
@@ -34,9 +35,10 @@ function App() {
     const [directionsResponse, setDirectionsResponse] = useState(null)
     const [distances, setDistances] = useState([])
     const [durations, setDurations] = useState([])
+    const [isPhone, setIsPhone] = useState(true)
+    const [phoneNum, setPhoneNum] = useState('')
     const form = useRef()
     const [url, setUrl] = useState('https://www.google.com/maps/dir/?api=1&travelmode=drive')
-
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLEMAPS_API_KEY,
         libraries: APIs
@@ -47,6 +49,12 @@ function App() {
         if (!isLoaded) return
         calculateRoute()
     }, [isLoaded])
+
+    // Create a notifications when performing specific actions
+    function createNotif(type) {
+        if (type === 'success') return Notiflix.Notify.success('Your directions have been sent.', { timeout: 5000, fontSize: '1rem', width: '325px', distance: '70px', position: 'center-top', clickToClose: true, })
+        if (type === 'fail') return Notiflix.Notify.failure('An error has occurred, please try again.', { timeout: 5000, fontSize: '1rem', width: '390px', distance: '70px', position: 'center-top', clickToClose: true, })
+    }
 
     async function calculateRoute() {
         const directionsService = new google.maps.DirectionsService()
@@ -94,19 +102,26 @@ function App() {
         }
     }
 
-    // Send an email with a link to the Google Maps route using EmailJS (to access on the phone)
-    const sendEmail = (e) => {
+    // Send a text or email with a link to the Google Maps route using Twilio or EmailJS respectively
+    const sendDirections = async (e, method) => {
         e.preventDefault()
-        emailjs.sendForm('directions_service', 'directions_form', form.current, process.env.NEXT_PUBLIC_EMAILJS_API_KEY)
-            .then(() => {
-                // Notifications appear based on whether the email went through
-                Notiflix.Notify.success("Your directions have been sent.",
-                    { timeout: 5000, fontSize: "1rem", width: "560px", distance: "70px", position: "center-top", clickToClose: true, })
-            }, (error) => {
-                Notiflix.Notify.failure("An error has occurred, please try again.",
-                    { timeout: 5000, fontSize: "1rem", width: "390px", distance: "70px", position: "center-top", clickToClose: true, })
-            })
-        e.target.reset()
+        let res
+        if (method === 'phone') {
+            res = await axios.post('/api/sendSMS',
+                { phoneNum, msg: 'View In Google Maps: ' + url },
+                { headers: { 'Content-Type': 'application/json' } })
+            res = res.data
+            setPhoneNum('')
+        } else if (method === 'email') {
+            res = await emailjs.sendForm('directions_service', 'directions_form', form.current, process.env.NEXT_PUBLIC_EMAILJS_API_KEY)
+            e.target.reset()
+        }
+        // Notification appears based on whether the SMS or email went through
+        if (res.status === 200) {
+            createNotif('success')
+        } else {
+            createNotif('fail')
+        }
     }
 
     // Render a loading animation if the Map has not loaded in yet
@@ -157,44 +172,96 @@ function App() {
                                 }
                             >
                                 {close => (
-                                    <div className="mapPopup">
-                                        <button className="close" onClick={close}>
+                                    <div className='mapPopup'>
+                                        <button className='close' onClick={close}>
                                             &times;
                                         </button>
-                                        <h4>Share your route</h4>
-                                        <Form ref={form} onSubmit={(e) => {
-                                            sendEmail(e)
-                                            close()
-                                        }}>
-                                            <Form.Group as={Row} className="mb-3" controlId="directionsFormName">
-                                                <Form.Label column sm="2" >Name: </Form.Label>
-                                                <Col sm="10">
-                                                    <Form.Control
-                                                        required
-                                                        name="from_name"
-                                                        type="text"
-                                                        placeholder="Enter your name"
-                                                    />
-                                                </Col>
-                                            </Form.Group>
-                                            <Form.Group as={Row} className="mb-3" controlId="directionsFormEmail">
-                                                <Form.Label column sm="2" >Email: </Form.Label>
-                                                <Col sm="10">
-                                                    <Form.Control
-                                                        required
-                                                        name="to_email"
-                                                        type="email"
-                                                        placeholder="Enter the email to send directions to"
-                                                    />
-                                                </Col>
-                                            </Form.Group>
-                                            <input name='url' value={url} hidden />
-                                            <div className='text-center'>
-                                                <Button variant="success" type="submit">
-                                                    <p className='m-0 px-3'>Send</p>
-                                                </Button>
+                                        <div className='text-center my-3 pb-3' style={{ borderBottom: '1px solid black' }}>
+                                            <Button
+                                                variant='outline-dark me-5 px-5'
+                                                active={isPhone}
+                                                onClick={() => setIsPhone(true)}
+                                            >
+                                                Phone
+                                            </Button>
+                                            <Button
+                                                variant='outline-dark px-5'
+                                                active={!isPhone}
+                                                onClick={() => setIsPhone(false)}
+                                            >
+                                                Email
+                                            </Button>
+                                        </div>
+                                        {isPhone
+                                            ? <div>
+                                                <h4 className='text-center'>Share your route</h4>
+                                                <Form
+                                                    onSubmit={(e) => {
+                                                        sendDirections(e, 'phone')
+                                                        close()
+                                                    }}
+                                                >
+                                                    <Form.Group as={Row} className='mb-3' controlId='directionsFormPhone'>
+                                                        <Form.Label column sm='3' >Phone Number: </Form.Label>
+                                                        <Col sm='9'>
+                                                            <Form.Control
+                                                                required
+                                                                type='number'
+                                                                value={phoneNum}
+                                                                onChange={(e) => setPhoneNum(e.target.value)}
+                                                                placeholder='Enter the phone number to send directions to'
+                                                            />
+                                                            <Form.Text>Please add the country code if the number is not US-based.</Form.Text>
+                                                        </Col>
+                                                    </Form.Group>
+                                                    <input name='url' value={url} readOnly hidden />
+                                                    <div className='text-center'>
+                                                        <Button variant='success' type='submit'>
+                                                            <p className='m-0 px-3'>Send</p>
+                                                        </Button>
+                                                    </div>
+                                                </Form>
                                             </div>
-                                        </Form>
+                                            : <div>
+                                                <h4 className='text-center'>Share your route</h4>
+                                                <Form
+                                                    ref={form}
+                                                    onSubmit={(e) => {
+                                                        sendDirections(e, 'email')
+                                                        close()
+                                                    }}
+                                                >
+                                                    <Form.Group as={Row} className='mb-3' controlId='directionsFormName'>
+                                                        <Form.Label column sm='2' >Name: </Form.Label>
+                                                        <Col sm='10'>
+                                                            <Form.Control
+                                                                required
+                                                                name='from_name'
+                                                                type='text'
+                                                                placeholder='Enter your name'
+                                                            />
+                                                        </Col>
+                                                    </Form.Group>
+                                                    <Form.Group as={Row} className='mb-3' controlId='directionsFormEmail'>
+                                                        <Form.Label column sm='2' >Email: </Form.Label>
+                                                        <Col sm='10'>
+                                                            <Form.Control
+                                                                required
+                                                                name='to_email'
+                                                                type='email'
+                                                                placeholder='Enter the email to send directions to'
+                                                            />
+                                                        </Col>
+                                                    </Form.Group>
+                                                    <input name='url' value={url} readOnly hidden />
+                                                    <div className='text-center'>
+                                                        <Button variant='success' type='submit'>
+                                                            <p className='m-0 px-3'>Send</p>
+                                                        </Button>
+                                                    </div>
+                                                </Form>
+                                            </div>
+                                        }
                                     </div>
                                 )}
                             </Popup>
@@ -207,7 +274,7 @@ function App() {
                                         {names.map((name, index) => {
                                             return (
                                                 index < names.length - 1 &&
-                                                <div className='mapListItem'>
+                                                <div key={uuid()} className='mapListItem'>
                                                     <li key={uuid()}>
                                                         <strong>{alphabet[index]}.</strong> {name}
                                                     </li>
@@ -222,7 +289,7 @@ function App() {
                                 <Col sm={3}>
                                     <ul className='mapList'>
                                         {durations.map((duration, index) => (
-                                            <div className='mapListItem'>
+                                            <div key={uuid()} className='mapListItem'>
                                                 <li key={uuid()}>
                                                     <strong>{duration}</strong>
                                                 </li>

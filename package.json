@@ -22,6 +22,7 @@
     "react-select": "^5.5.0",
     "reactjs-popup": "^2.0.5",
     "sass": "^1.55.0",
+    "twilio": "^4.7.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

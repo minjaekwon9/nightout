@@ -91,7 +91,7 @@ export default function Home() {
     e.preventDefault()
     // Validate forms using Notiflix
     if (!pos) {
-      createNotif("fail", "Enter your address.", "220px")
+      createNotif("fail", "Enter your address.", "230px")
     } else if (formValues.address && !addressList.some(city => city.value === formValues.address)) {
       createNotif("fail", "Select your address.", "175px")
     } else if (!formValues.numOfStops) {
